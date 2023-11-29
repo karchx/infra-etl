@@ -111,6 +111,6 @@ resource "aws_cloudwatch_metric_alarm" "job_success" {
     JobName = "etl-logs"
   }
 
-  alarm_actions = [aws_sns_topic.sns.arn]
-  ok_actions    = [aws_sns_topic.sns.arn]
+  #alarm_actions = [aws_sns_topic.sns.arn]
+  #ok_actions    = [aws_sns_topic.sns.arn]
 }
