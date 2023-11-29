@@ -34,21 +34,19 @@ resource "aws_cloudwatch_event_target" "custom_glue_job_metrics" {
   }
 }
 
-data "handler_file" "lambda_handler" {
+data "archive_file" "zip_handler" {
   type = "zip"
-
-  source_dir  = var.lambda_src_file
-  output_path = var.lambda_out_file
+  source_dir  = "${path.module}/scripts/"
+  output_path = "${path.module}/handler.zip"
 }
 
 resource "aws_lambda_function" "custom_glue_job_metrics" {
   function_name = "CustomGlueJobMetrics"
 
-  source_code_hash = filebase64sha256(data.handler_file.lambda_handler.output_path)
+  filename         = "${path.module}/handler.zip" 
   role             = aws_iam_role.custom_glue_job_metrics.arn
   handler          = "app.handler.handler"
-  runtime          = "python3.11"
-  timeout          = 90
+  runtime          = "python3.9"
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch" {
@@ -95,4 +93,24 @@ resource "aws_iam_role_policy" "custom_glue_job_metrics" {
       }
     ]
   })
+}
+
+# Create alarm Success
+resource "aws_cloudwatch_metric_alarm" "job_success" {
+  alarm_name          = "JobSuccess"
+  metric_name         = "Success"
+  namespace           = "GlueBasicMetrics"
+  period              = "300"
+  statistic           = "Sum"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = "1"
+  evaluation_periods  = "1"
+  treat_missing_data  = "ignore"
+
+  dimensions = {
+    JobName = "etl-logs"
+  }
+
+  alarm_actions = [aws_sns_topic.sns.arn]
+  ok_actions    = [aws_sns_topic.sns.arn]
 }
