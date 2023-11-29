@@ -11,7 +11,7 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_event_rule" "custom_glue_job_metrics" {
-  name        = "etl-logs"
+  name        = var.glue_job_config_name
   description = "Create custom metrics from glue job events"
 
   state = "ENABLED"
@@ -95,22 +95,18 @@ resource "aws_iam_role_policy" "custom_glue_job_metrics" {
   })
 }
 
-# Create alarm Success
-resource "aws_cloudwatch_metric_alarm" "job_success" {
-  alarm_name          = "JobSuccess"
-  metric_name         = "Success"
-  namespace           = "GlueBasicMetrics"
-  period              = "300"
-  statistic           = "Sum"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  threshold           = "1"
-  evaluation_periods  = "1"
-  treat_missing_data  = "ignore"
-
-  dimensions = {
-    JobName = "etl-logs"
+resource "aws_glue_job" "job_logs" {
+  name  = var.glue_job_config_name
+  role_arn  = var.iam_arn_glue
+  command {
+    name = "pythonshell"
+    script_location = var.s3_job_glue
   }
 
-  #alarm_actions = [aws_sns_topic.sns.arn]
-  #ok_actions    = [aws_sns_topic.sns.arn]
+  default_arguments = {
+    "--continuous-log-logGroup"          = "/aws/glue/jobs"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "--enable-continuous-log-filter"     = "true"
+    "--enable-metrics"                   = ""
+  } 
 }
