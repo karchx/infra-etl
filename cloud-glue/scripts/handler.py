@@ -14,7 +14,7 @@ def handler(event, _context, metrics):
     if event["detail-type"] == "Glue Job State Change":
         state = event["detail"]["state"]
 
-        if state not in ["SUCCEEDED", "FAILED", "TIMEOUT", "STOPPED"]:
+        if state not in ["SUCCEEDED", "FAILED", "TIMEOUT", "STOPPED", "RUNNING"]:
             raise AttributeError("State is not supported.")
 
         metrics.put_metric(key=state.capitalize(), value=1, unit="Count")
