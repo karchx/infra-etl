@@ -24,7 +24,7 @@ resource "aws_cloudwatch_event_rule" "custom_glue_job_metrics" {
 }
 
 resource "aws_cloudwatch_event_target" "custom_glue_job_metrics" {
-  target_id = "CustomGlueJobMetrics"
+  target_id = var.glue_job_config_name
   rule      = aws_cloudwatch_event_rule.custom_glue_job_metrics.name
   arn       = aws_lambda_function.custom_glue_job_metrics.arn
 
@@ -93,6 +93,28 @@ resource "aws_iam_role_policy" "custom_glue_job_metrics" {
       }
     ]
   })
+}
+
+resource "aws_cloudwatch_metric_alarm" "job_failed" {
+  alarm_name          = "JobFailed"
+  metric_name         = "Failed"
+  namespace           = "GlueBasicMetrics"
+  period              = "300"
+  statistic           = "Maximum"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 1
+  evaluation_periods  = "1"
+  treat_missing_data  = "ignore"
+  actions_enabled     = true
+
+  dimensions = {
+    JobName = aws_glue_job.job_logs.name
+  }
+
+  #alarm_actions = [aws_sns_topic.sns.arn]
+  #ok_actions    = [aws_sns_topic.sns.arn]
+  
+  alarm_description = "Alarma para el job de AWS Glue en caso de fallo"
 }
 
 resource "aws_glue_job" "job_logs" {

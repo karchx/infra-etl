@@ -9,7 +9,7 @@ def handler(event, _context, metrics):
     metrics.set_namespace(f"GlueBasicMetrics")
     metrics.set_dimensions(
         {"JobName": glue_job_name}, {"JobName": glue_job_name, "JobRunId": glue_job_run_id}
-    ).py
+    )
 
     if event["detail-type"] == "Glue Job State Change":
         state = event["detail"]["state"]
