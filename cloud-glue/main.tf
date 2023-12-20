@@ -45,7 +45,7 @@ resource "aws_lambda_function" "custom_glue_job_metrics" {
 
   filename         = "${path.module}/handler.zip" 
   role             = aws_iam_role.custom_glue_job_metrics.arn
-  handler          = "app.handler.handler"
+  handler          = "handler.handler"
   runtime          = "python3.9"
 }
 
@@ -108,27 +108,27 @@ resource "aws_cloudwatch_metric_alarm" "job_failed" {
   actions_enabled     = true
 
   dimensions = {
-    JobName = aws_glue_job.job_logs.name
+    JobName = var.glue_job_config_name
   }
 
-  #alarm_actions = [aws_sns_topic.sns.arn]
+  # alarm_actions = [aws_lambda_function.custom_glue_job_metrics.arn]
   #ok_actions    = [aws_sns_topic.sns.arn]
   
   alarm_description = "Alarma para el job de AWS Glue en caso de fallo"
 }
 
-resource "aws_glue_job" "job_logs" {
-  name  = var.glue_job_config_name
-  role_arn  = var.iam_arn_glue
-  command {
-    name = "pythonshell"
-    script_location = var.s3_job_glue
-  }
-
-  default_arguments = {
-    "--continuous-log-logGroup"          = "/aws/glue/jobs"
-    "--enable-continuous-cloudwatch-log" = "true"
-    "--enable-continuous-log-filter"     = "true"
-    "--enable-metrics"                   = ""
-  } 
-}
+# resource "aws_glue_job" "job_logs" {
+#   name  = var.glue_job_config_name
+#   role_arn  = var.iam_arn_glue
+#   command {
+#     name = "pythonshell"
+#     script_location = var.s3_job_glue
+#   }
+# 
+#   default_arguments = {
+#     "--continuous-log-logGroup"          = "/aws/glue/jobs"
+#     "--enable-continuous-cloudwatch-log" = "true"
+#     "--enable-continuous-log-filter"     = "true"
+#     "--enable-metrics"                   = ""
+#   } 
+# }
